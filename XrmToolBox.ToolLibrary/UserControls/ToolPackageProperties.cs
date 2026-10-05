@@ -1,4 +1,3 @@
-﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -95,15 +94,8 @@ namespace XrmToolBox.ToolLibrary.UserControls
             plugin.Versions = new List<XtbPluginVersion>();
             bw.DoWork += (s, evt) =>
             {
-                var searchResult = library.GetNugetPackageSearchResultAsync(plugin.NugetId).GetAwaiter().GetResult();
-                var registrationUrl = library.GetNugetPackageRegistrationUrlAsync(plugin.NugetId, searchResult).GetAwaiter().GetResult();
-                var registrationResponse = library.HttpClient.GetAsync(registrationUrl).GetAwaiter().GetResult();
-                registrationResponse.EnsureSuccessStatusCode();
-                var registrationData = registrationResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                var rd = JObject.Parse(registrationData);
-                var versions = (rd["items"] as JArray ?? new JArray())
-                    .SelectMany(page => page["items"] as JArray ?? new JArray())
-                    .Where(item => item["catalogEntry"]?["listed"]?.Value<bool>() == true);
+                var versions = library.GetNugetPackageVersionsAsync(plugin.NugetId).GetAwaiter().GetResult()
+                    .Where(item => item["catalogEntry"]?["listed"] == null || (bool)item["catalogEntry"]["listed"]);
 
                 foreach (var versionInfo in versions)
                 {
